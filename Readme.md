@@ -1,3 +1,4 @@
-# Saga orchestration implementation with Kafka
+# [Saga orchestration implementation with Kafka](https://ibm-cloud-architecture.github.io/eda-saga-choreography)
 
-Read [in doc format](https://ibm-cloud-architecture.github.com/eda-saga-orchestration).
+
+Read [in mkdocs format](https://ibm-cloud-architecture.github.io/eda-saga-choreography).

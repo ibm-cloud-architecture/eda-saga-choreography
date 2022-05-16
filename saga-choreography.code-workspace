@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "refarch-kc-reefer-ms"
+		},
+		{
+			"path": "refarch-kc-order-cmd-ms"
+		},
+		{
+			"path": "refarch-kc-voyage-ms"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic"
+	}
+}

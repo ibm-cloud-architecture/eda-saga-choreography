@@ -1,9 +1,9 @@
 site_name: Event-driven Solution - Saga Choreography
 site_description: IBM Automation - Event-Driven Solution - Sharing knowledge
 site_author: Jerome Boyer
-site_url: https://ibm-cloud-architecture.github.com/refarch-eda
+site_url: https://ibm-cloud-architecture.github.com/eda-saga-choreography
 repo_name: ibm-cloud-architecture/refarch-eda
-repo_url: https://github.com/ibm-cloud-architecture/refarch-eda
+repo_url: https://github.com/ibm-cloud-architecture/eda-saga-choreography
 copyright: Copyright © 2022  IBM
 
 docs_dir: docs

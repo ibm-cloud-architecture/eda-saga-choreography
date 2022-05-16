@@ -67,8 +67,18 @@ services:
     image: quay.io/ibmcase/refarch-kc-reefer-ms
     container_name: reeferms
     ports:
-      - 8081:8081
+      - 8081:8080
     environment:
       KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
     depends_on:
       - kafka
+  voyagems:
+    image: quay.io/ibmcase/refarch-kc-voyage-ms
+    container_name: voyagems
+    ports:
+      - 8082:8080
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+    depends_on:
+      - kafka
+    
