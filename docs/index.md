@@ -30,8 +30,48 @@ The new implementation of the services are done with Quarkus and Microprofile Me
 * [Reefer Microsercice](https://github.com/ibm-cloud-architecture/refarch-kc-reefer-ms)
 * [Voyage Microservice](https://github.com/ibm-cloud-architecture/refarch-kc-voyage-ms)
 
-Each code structure is based on the domain-driven-design practice with clear separation between layer and keep the domain layer using the ubiquituous language of each domain: order, reefer, and voyage.
+Each code structure is based on the domain-driven-design practice with clear separation between layers (app, domain, infrastructure) and keep the domain layer using the ubiquituous language of each domain: order, reefer, and voyage.
 
+```
+│   │   │   └── ibm
+│   │   │       └── eda
+│   │   │           └── kc
+│   │   │               └── orderms
+│   │   │                   ├── app
+│   │   │                   │   └── OrderCommandApplication.java
+│   │   │                   ├── domain
+│   │   │                   │   ├── Address.java
+│   │   │                   │   ├── OrderService.java
+│   │   │                   │   └── ShippingOrder.java
+│   │   │                   └── infra
+│   │   │                       ├── api
+│   │   │                       │   └── ShippingOrderResource.java
+│   │   │                       ├── events
+│   │   │                       │   ├── EventBase.java
+│   │   │                       │   ├── order
+│   │   │                       │   │   ├── OrderCreatedEvent.java
+│   │   │                       │   │   ├── OrderEvent.java
+│   │   │                       │   │   ├── OrderEventProducer.java
+│   │   │                       │   │   ├── OrderUpdatedEvent.java
+│   │   │                       │   │   └── OrderVariablePayload.java
+│   │   │                       │   ├── reefer
+│   │   │                       │   │   ├── ReeferAgent.java
+│   │   │                       │   │   ├── ReeferAllocated.java
+│   │   │                       │   │   ├── ReeferEvent.java
+│   │   │                       │   │   ├── ReeferEventDeserializer.java
+│   │   │                       │   │   └── ReeferVariablePayload.java
+│   │   │                       │   └── voyage
+│   │   │                       │       ├── VoyageAgent.java
+│   │   │                       │       ├── VoyageAllocated.java
+│   │   │                       │       ├── VoyageEvent.java
+│   │   │                       │       ├── VoyageEventDeserializer.java
+│   │   │                       │       └── VoyageVariablePayload.java
+│   │   │                       └── repo
+│   │   │                           ├── OrderRepository.java
+│   │   │                           └── OrderRepositoryMem.java
+```
+
+Events are defined in the infrastructure level, as well as the JAX-RS APIs.
 ### Compensation
 
 The SAGA pattern comes with the tradeoff that a compensation process must also be implemented in the case that one, or multiple, of the sub transactions fails or does not achieve to complete so that the system rolls back to the initial state before the transaction began.
@@ -42,15 +82,13 @@ In our specific case, a new order creation transaction can fail either because w
 
 ![no container](images/saga-flow-2.png)
 
-When a new order creation is requested by a customer but there is not a container to be allocated to such order, either because the container(s) do not have enough capacity or there is no container available in the origin port for such order, the compensation process for the order creation transaction is quite simple. The order microservice will not get an answer 
-
-The Spring Container microservice will emit a ContainerNotFound event that will inform the interested parties (Order Command and Voyages) that there is no container available for a particular order creation request. The Voyages microservices will not need to do anything while the Order Command microservice will transition the order creation request to rejected as a result. It will also emit an OrderRejected event to inform any other interested parties.
+When a new order creation is requested by a customer but there is not a container to be allocated to such order, either because the container(s) do not have enough capacity or there is no container available in the origin port for such order, the compensation process for the order creation transaction is quite simple. The order microservice will not get an answer from the reefer manager, anf after a certain time it will trigger the compensation flow by sending a OrderUpdate with status onHold. The voyage service which may has responded positively before that, may roll back the order to voyage relationship.
 
 ### No voyage
 
-![no voyage](images/Slide3.png)
+![no voyage](images/saga-flow-3.png)
 
-This case is, however, a bit more complicate than the previous one as, this time, the Spring Container microservice will have to compensate for the action of allocating a container to the order. As we see, the actions flow remains as expected for the SAGA transaction until the Voyages microservice informs with a VoyageNotFound event that there is no voyage matching the required request of the order. As a result, the Order Command microservice will transition the order to Rejected and emit an OrderRejected event to inform the interested parties. In this case, the Spring Container is one of those interested parties as it will need to kick off the compensation process, which in this case is nothing more than de-allocate the container to the order to make it available for any other coming order.
+This case is the sysmetric of the other one. The actions flow remains as expected for the SAGA transaction until the Voyages microservice is not answering after a time period or answering negatively. As a result, the Order Command microservice will transition the order to `OnHold` and emit an OrderUpdateEvent to inform the saga participants. In this case, the Reefer manager is one of those interested parties as it will need to kick off the compensation task, which in this case is nothing more than de-allocate the container to the order to make it available for any other coming order.
 
 ## Run locally
 
@@ -62,11 +100,59 @@ docker-compose up -d
 
 ### Happy path demonstration
 
-Execute the create order
+* Execute the create order
 
 ```sh
-./e2e/scripts/createOrder.sh
+./e2e/sendGoodOrder.sh
 ```
+
+```json
+{ "orderID": "GoodOrder02",
+  "productID":"P01",
+  "customerID":"Customer01",
+  "quantity":70,
+  "pickupAddress":{"street":"1st main street","city":"San Francisco","country":"USA","state":"CA","zipcode":"95051"},
+  "pickupDate":null,
+  "destinationAddress":{"street":"1st horizon road","city":"Shanghai","country":"CH","state":"S1","zipcode":"95051"},
+  "expectedDeliveryDate":null,
+  "creationDate":"2022-05-16",
+  "updateDate":"2022-05-16",
+  "status":"pending"}
+```
+
+* Verify in Kafdrop the `orders` topic contains the expected CreateOrder event
+
+```sh
+chrome https://localhost:9000
+```
+
+![](./images/order-hp.png)
+
+* Verify in Kafdrop the `reefers` topic
+
+![](./images/reefer-hp.png)
+
+* Verify the `voyages` topic
+
+![](./images/voyage-hp.png)
+
+* The ShippingOrder should now be in assigned state as the order manager receives the two positive answers from the saga participant.
+
+![](./images/order-assigned.png)
+
+### Trigger the compensation tasks
+
+The order has a pickup city set to Boston, and there is no reefer available at that location at that time, so the Reefer service is not responding to the order. The order microservice has two timers for each topics it subscribes to. If those timer sets, it looks at existing pending orders and trigget an OrderUpdateEvent with status onHold.
+
+* Send an order from Boston
+
+```sh
+./e2e/sendNonPossibleOrder.sh
+```
+
+* Verify order created event reaches voyage and reefer microservices
+* Voyage generates a event for voyages allocated.
 
 ## Deploy with Event Streams on OpenShift
 
+TBD
