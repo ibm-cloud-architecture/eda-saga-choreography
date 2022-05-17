@@ -10,7 +10,7 @@ With microservice each transaction updates data within a single service, each su
 
 We have implemented the SAGA pattern in the Reefer Container Shipment Reference Application for the scenario where an order, to carry fresh goods from an origin port to a destination port, is created by a customer. The Choreography variant of the SAGA pattern, done with Kafka, involves strong decoupling between services, and each participants listen to facts and act on them independently. So each service will have at least one topic representing states on their own entity. In the figure below the saga is managed in the context of the order microservice in one of the business function like `createOrder`.
 
-![choreography](./images/saga-orchestration.png)
+![choreography](./images/saga-choreography.png)
 
 The figure above illustrates that each services uses its own topic in Kafka, so to manage the saga the Order service needs to listen to all participants outcome.
 
@@ -98,6 +98,26 @@ In this repository, we have define a docker compose file that let you run the de
 docker-compose up -d
 ```
 
+### Verify the data
+
+* Look available voyages, can be seen via API or Swagger UI [https://localhost:8082/q/swagger-ui](https://localhost:8082/q/swagger-ui)
+
+```sh
+curl -X 'GET' 'http://localhost:8082/api/v1/voyages' -H 'accept: application/json' | jq
+```
+
+* Look available Refrigerator containers, can be seen via API or Swagger UI [https://localhost:8081/q/swagger-ui](https://localhost:8081/q/swagger-ui)
+
+```sh
+curl -X 'GET' 'http://localhost:8081/api/v1/reefers' -H 'accept: application/json' | jq
+```
+
+* Validate Order service by looking at current orders via API or Swagger UI [https://localhost:8080/q/swagger-ui](https://localhost:8080/q/swagger-ui)
+
+```sh
+curl -X 'GET' 'http://localhost:8080/api/v1/orders' -H 'accept: application/json' | jq
+```
+
 ### Happy path demonstration
 
 * Execute the create order
@@ -146,13 +166,41 @@ The order has a pickup city set to Boston, and there is no reefer available at t
 
 * Send an order from Boston
 
-```sh
-./e2e/sendNonPossibleOrder.sh
-```
+    ```sh
+    ./e2e/sendNonPossibleOrder.sh
+    ```
 
-* Verify order created event reaches voyage and reefer microservices
-* Voyage generates a event for voyages allocated.
+    ![](./images/boston-order.png)
+
+* Verify order created event reaches voyage service:
+
+    ```logs
+    09:45:06 INFO  [ib.ed.kc.vo.in.ev.or.OrderAgent] (vert.x-eventloop-thread-5) Received order : NAOrder01
+    09:45:06 INFO  [ib.ed.kc.vo.in.ev.vo.VoyageEventProducer] (vert.x-eventloop-thread-5) Send voyage message --> V005 ts: 1652805906035
+    ```
+
+* and the reefer microservices
+
+    ```logs
+    09:45:05 INFO  [ib.ed.kc.fr.in.ev.or.OrderAgent] (vert.x-eventloop-thread-6) Received order : NAOrder01
+    ```
+
+* Voyage generates an event for voyages allocated.
+
+* Order microservice timeout as it does not get an answer from Reefer, so it put the order on-Hold and send an order updated event
+
+    ![](./images/order-onhold.png)
+
+* Voyage is compensated.
+
 
 ## Deploy with Event Streams on OpenShift
 
 TBD
+
+???- "More reading"
+    * [Deduction-Based Polymorphism in Jackson 2.12](https://www.baeldung.com/jackson-deduction-based-polymorphism)
+    * [Smallrye - reactive messaging](https://smallrye.io/smallrye-reactive-messaging/3.14.1/)
+    * [Saga design pattern](https://ibm-cloud-architecture.github.io/refarch-eda/patterns/saga/)
+    * [Quarkus Kafka reference guide](https://quarkus.io/guides/kafka#testing-without-a-broker)
+    * [Quarkus SCHEDULING PERIODIC TASKS](https://quarkus.io/guides/scheduler#standard-scheduling)
