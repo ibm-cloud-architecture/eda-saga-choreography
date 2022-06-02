@@ -1,0 +1,5 @@
+resources: 
+  - ./es-topics.yaml
+  - ./tls-user.yaml
+  - ./cp-ca-secret.yaml
+  - ./cp-tls-usr-secret.yaml

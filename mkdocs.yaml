@@ -37,6 +37,7 @@ theme:
       - search.suggest
       - toc.follow
       - toc.integrate
+
 extra_css: ["extra.css"]
 use_directory_urls: true
 extra:
@@ -60,7 +61,11 @@ markdown_extensions:
   - meta
   - md_in_html
   - pymdownx.smartsymbols
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - toc:
       permalink: true
       toc_depth: 3

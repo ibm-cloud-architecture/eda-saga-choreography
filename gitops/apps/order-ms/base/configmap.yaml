@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: order-ms-cm
+data:
+  APP_VERSION: 0.0.1
+  MP_MESSAGING_OUTGOING_ORDERS_TOPIC: eda-saga-orders
+  MP_MESSAGING_INCOMING_REEFERS_TOPIC: eda-saga-reefers
+  MP_MESSAGING_INCOMING_VOYAGES_TOPIC: eda-saga-voyages
+  KAFKA_APPLICATION_ID: eda-saga-order-ms
+  KAFKA_SECURITY_PROTOCOL: SSL
+  KAFKA_BOOTSTRAP_SERVERS: es-demo-kafka-bootstrap.cp4i-eventstreams.svc:9093
+  

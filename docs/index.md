@@ -10,9 +10,14 @@ With microservice each transaction updates data within a single service, each su
 
 We have implemented the SAGA pattern in the Reefer Container Shipment Reference Application for the scenario where an order, to carry fresh goods from an origin port to a destination port, is created by a customer. The Choreography variant of the SAGA pattern, done with Kafka, involves strong decoupling between services, and each participants listen to facts and act on them independently. So each service will have at least one topic representing states on their own entity. In the figure below the saga is managed in the context of the order microservice in one of the business function like `createOrder`.
 
-![choreography](./images/saga-choreography.png)
+![choreography](./images/saga-choreography.png){ width="900" }
 
 The figure above illustrates that each services uses its own topic in Kafka, so to manage the saga the Order service needs to listen to all participants outcome.
+
+The Order business entity in this service supports a simple state machine as defined below:
+
+```
+```
 
 The happy path looks like in the following sequence diagram:
 
@@ -195,6 +200,23 @@ The order has a pickup city set to Boston, and there is no reefer available at t
 
 
 ## Deploy with Event Streams on OpenShift
+
+Deploy the three services with an existing Event Streams deployed in the namespace `cp4i-eventstreams`.
+### One time deploy
+
+* Under `gitops` folder do the following
+
+```sh
+make all
+```
+
+* To clean up
+
+```sh
+make clean
+```
+
+### GitOps with ArgoCD/Tekton
 
 TBD
 

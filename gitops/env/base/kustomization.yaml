@@ -1,0 +1,5 @@
+resources:
+- namespace.yaml
+- role.yaml
+- argocd-admin.yaml
+- service-account.yaml
