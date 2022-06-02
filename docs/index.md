@@ -210,6 +210,12 @@ Deploy the three services with an existing Event Streams deployed in the namespa
 make all
 ```
 
+* Open order Swagger-ui
+
+```
+chrome $(oc get route)
+```
+
 * To clean up
 
 ```sh

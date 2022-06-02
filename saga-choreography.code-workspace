@@ -8,9 +8,6 @@
 		},
 		{
 			"path": "refarch-kc-voyage-ms"
-		},
-		{
-			"path": "../../demo-e2e-order-mgt/eda-demo-order-ms"
 		}
 	],
 	"settings": {
