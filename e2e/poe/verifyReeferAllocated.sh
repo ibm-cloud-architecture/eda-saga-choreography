@@ -1,3 +1,2 @@
-curl -X 'GET' \
-  'http://eda-saga-reefer-eda-saga.apps.poe.coc-ibm.com/api/v1/reefers/transaction/GoodOrder01' \
-  -H 'accept: application/json'
+export REEFER_URL=$(oc get route eda-saga-reefer -o jsonpath='{.status.ingress[].host}')
+curl -X 'GET' http://$REEFER_URL/api/v1/reefers/transaction/GoodOrder01 -H 'accept: application/json'

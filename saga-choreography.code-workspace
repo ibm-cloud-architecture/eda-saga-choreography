@@ -8,6 +8,18 @@
 		},
 		{
 			"path": "refarch-kc-voyage-ms"
+		},
+		{
+			"path": "docs"
+		},
+		{
+			"path": "e2e"
+		},
+		{
+			"path": "gitops"
+		},
+		{
+			"path": "../../rt-inventory/refarch-eda-store-inventory"
 		}
 	],
 	"settings": {

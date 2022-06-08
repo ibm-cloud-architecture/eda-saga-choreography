@@ -3,7 +3,6 @@ kind: ConfigMap
 metadata:
   name: order-ms-cm
 data:
-  APP_VERSION: 0.0.1
   MP_MESSAGING_OUTGOING_ORDERS_TOPIC: eda-saga-orders
   MP_MESSAGING_INCOMING_REEFERS_TOPIC: eda-saga-reefers
   MP_MESSAGING_INCOMING_VOYAGES_TOPIC: eda-saga-voyages

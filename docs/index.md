@@ -12,12 +12,15 @@ We have implemented the SAGA pattern in the Reefer Container Shipment Reference 
 
 ![choreography](./images/saga-choreography.png){ width="900" }
 
-The figure above illustrates that each services uses its own topic in Kafka, so to manage the saga the Order service needs to listen to all participants outcome.
+The figure above illustrates that each services uses its own topic in Kafka to generate event about state changes to their own business entity. 
+
+To manage the saga the `Order service` needs to listen to all participants topics and correlate using the order ID.
 
 The Order business entity in this service supports a simple state machine as defined below:
 
-```
-```
+![](./images/order-state.png)
+
+Each state transition should generate an event to the orders topic.
 
 The happy path looks like in the following sequence diagram:
 
@@ -210,10 +213,50 @@ Deploy the three services with an existing Event Streams deployed in the namespa
 make all
 ```
 
+You should get a trace like:
+
+```sh
+namespace/eda-saga created
+serviceaccount/eda-saga-sa created
+role.rbac.authorization.k8s.io/secret-mgr created
+rolebinding.rbac.authorization.k8s.io/argocd-admin created
+clusterrolebinding.rbac.authorization.k8s.io/secrets-to-sa configured
+Now using project "eda-saga" on server "https://api.poe.coc-ibm.com:6443".
+job.batch/cp-ca-secret created
+job.batch/cp-tls-usr-secret created
+kafkatopic.eventstreams.ibm.com/eda-saga-orders created
+kafkatopic.eventstreams.ibm.com/eda-saga-reefers created
+kafkatopic.eventstreams.ibm.com/eda-saga-voyages created
+kafkauser.eventstreams.ibm.com/saga-tls-user created
+serviceaccount/eda-saga-sa configured
+rolebinding.rbac.authorization.k8s.io/eda-saga-view created
+configmap/order-ms-cm created
+service/eda-saga-order created
+deployment.apps/eda-saga-order created
+route.route.openshift.io/eda-saga-order created
+configmap/reefer-ms-cm created
+service/eda-saga-reefer created
+deployment.apps/eda-saga-reefer created
+route.route.openshift.io/eda-saga-reefer created
+configmap/voyage-ms-cm created
+service/eda-saga-voyage created
+deployment.apps/eda-saga-voyage created
+route.route.openshift.io/eda-saga-voyage created
+```
+
 * Open order Swagger-ui
 
+```sh
+chrome http://$(oc get route eda-saga-order -o jsonpath='{.status.ingress[].host}')/q/swagger-ui/
 ```
-chrome $(oc get route)
+
+* Post a valid order using the e2e script. Run the following command in `e2e/poe` folder
+
+```sh
+export ORDER_URL=$(oc get route eda-saga-order -o jsonpath='{.status.ingress[].host}')
+./sendGoodOrder.sh 
+
+{"orderID":"GoodOrder01","productID":"P01","customerID":"Customer01","quantity":10,"pickupAddress":{"street":"1st main street","city":"San Francisco","country":"USA","state":"CA","zipcode":"95051"},"pickupDate":null,"destinationAddress":{"street":"1st horizon road","city":"Shanghai","country":"CH","state":"S1","zipcode":"95051"},"expectedDeliveryDate":null,"creationDate":"2022-06-08","updateDate":"2022-06-08","status":"pending","voyageID":null,"containerID":null}
 ```
 
 * To clean up
