@@ -67,7 +67,7 @@ spec:
         envFrom:
         - configMapRef:
             name: reefer-ms-cm
-        image: quay.io/ibmcase/eda-saga-reefer-ms
+        image: quay.io/ibmcase/eda-saga-reefer-ms:1.0.0
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 3

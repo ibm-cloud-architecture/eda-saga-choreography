@@ -67,7 +67,7 @@ spec:
         envFrom:
         - configMapRef:
             name: order-ms-cm
-        image: quay.io/ibmcase/eda-saga-order-ms
+        image: quay.io/ibmcase/eda-saga-order-ms:1.0.0
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 3

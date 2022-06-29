@@ -19,7 +19,7 @@
 			"path": "gitops"
 		},
 		{
-			"path": "../../rt-inventory/refarch-eda-store-inventory"
+			"path": "../../demo-e2e-order-mgt/eda-demo-order-ms"
 		}
 	],
 	"settings": {

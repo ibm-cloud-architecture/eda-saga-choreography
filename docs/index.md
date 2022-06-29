@@ -8,13 +8,13 @@ With microservice each transaction updates data within a single service, each su
 
 ## Implementation explanation
 
-We have implemented the SAGA pattern in the Reefer Container Shipment Reference Application for the scenario where an order, to carry fresh goods from an origin port to a destination port, is created by a customer. The Choreography variant of the SAGA pattern, done with Kafka, involves strong decoupling between services, and each participants listen to facts and act on them independently. So each service will have at least one topic representing states on their own entity. In the figure below the saga is managed in the context of the order microservice in one of the business function like `createOrder`.
+We have implemented the SAGA pattern in the Reefer Container Shipment Reference Application for the scenario where an order, to carry fresh goods from an origin port to a destination port, is created by a customer. The Choreography variant of the SAGA pattern, done with Kafka, involves strong decoupling between services, and each participant listens to facts from other services and acts on them independently. So each service will have at least one topic representing states on its own entity. In the figure below the saga is managed in the context of the order microservice in one of the business function like `createOrder`.
 
 ![choreography](./images/saga-choreography.png){ width="900" }
 
-The figure above illustrates that each services uses its own topic in Kafka to generate event about state changes to their own business entity. 
+The figure above illustrates that each service uses its own topic in Kafka to generate event about state changes to its own business entity. 
 
-To manage the saga the `Order service` needs to listen to all participants topics and correlate using the order ID.
+To manage the saga the `Order service` needs to listen to all participants topics and correlates event using the order ID as key.
 
 The Order business entity in this service supports a simple state machine as defined below:
 
@@ -26,7 +26,7 @@ The happy path looks like in the following sequence diagram:
 
 ![saga](./images/saga-flow-1.png)
 
-In this scenario, we have a long running transaction that spans across the Order Command microservice that creates the order and maintains the state of it, to the Reefer manager microservice that will try to find an empty container with enough capacity in the origin port to support the order, to the Voyage microservice that will try to find a voyage from the origin port to the destination port with enough capacity on the ship for the refrigerator containers.
+In this scenario, we have a long running transaction that spans across the Order Command microservice that creates the order and maintains the state of it, the Reefer manager microservice which tries to find an empty container with enough capacity in the origin port to support the order, the Voyage microservice which tries to find a voyage from the origin port to the destination port with enough capacity on the ship for the refrigerator containers.
 
 As you can see in the diagram above, the transaction does not finish until a reefer has been allocated and a voyage assigned to the order and, as a result, the order stays in pending state until all the sub transactions have successfully finished.
 
